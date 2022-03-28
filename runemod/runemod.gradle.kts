@@ -25,7 +25,7 @@ import ProjectVersions.openosrsVersion
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-version = "5.1.0"
+version = "0.0.1"
 
 project.extra["PluginName"] = "RuneMod"
 project.extra["PluginDescription"] = "Mod downloader and creator tool"
