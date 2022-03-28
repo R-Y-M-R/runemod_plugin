@@ -9,6 +9,8 @@ plugins {
     java
 }
 
+project.extra["GithubUrl"] = "https://github.com/RuneMod/runemod_plugin"
+
 apply<BootstrapPlugin>()
 apply<VersionPlugin>()
 
@@ -21,7 +23,8 @@ allprojects {
 subprojects {
     group = "com.openosrs.externals"
 
-    project.extra["PluginProvider"] = "OpenOSRS"
+    project.extra["ProjectSupportUrl"] = "https://runemod.net/"
+    project.extra["PluginProvider"] = "RuneMod"
     project.extra["ProjectUrl"] = "https://discord.gg/OpenOSRS"
     project.extra["PluginLicense"] = "3-Clause BSD License"
 
@@ -77,6 +80,9 @@ subprojects {
         compileOnly(group = "com.squareup.okhttp3", name = "okhttp", version = "4.9.1")
         compileOnly(group = "org.pf4j", name = "pf4j", version = "3.6.0")
         compileOnly(group = "io.reactivex.rxjava3", name = "rxjava", version = "3.1.1")
+
+        implementation(group = "net.java.dev.jna", name = "jna", version = "5.9.0")
+        implementation(group = "net.java.dev.jna", name = "jna-platform", version = "5.9.0")
 
         testAnnotationProcessor(group = "org.projectlombok", name = "lombok", version = "1.18.16")
 
