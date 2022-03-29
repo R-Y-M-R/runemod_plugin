@@ -17,7 +17,7 @@ public class MyRunnableReciever implements Runnable {
     AtomicReference atomicString = new AtomicReference("nothing yet");
     private boolean firstrun = true;
 
-    private int port = 9999;
+    private int port = 9994;
     private DatagramSocket serverSocketReciever;
     private byte[] sendData =  new byte[1024];
     private byte[] receiveData =  new byte[1024];
@@ -49,7 +49,11 @@ public class MyRunnableReciever implements Runnable {
 
     @SneakyThrows
     public void onStart() {
-        serverSocketReciever = new DatagramSocket(port, InetAddress.getByName("127.0.0.200"));
+        System.out.println("Runnable reciever start attempt");
+        serverSocketReciever = new DatagramSocket(port, InetAddress.getByName("127.0.0.240"));
+
+        serverSocketReciever.setReuseAddress(true);
+
         receiveData = new byte[1024];
         sendData = new byte[1024];
         serverSocketReciever.setSoTimeout(0);

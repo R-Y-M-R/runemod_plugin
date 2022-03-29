@@ -157,6 +157,7 @@ public class RuneMod extends Plugin
 		rsclient_ui_pixels_shared_memory.createSharedMemory("rsclient_ui_pixels", ((screenSize.height*screenSize.width*4)+4));
 		rsclient_terrain_shared_memory.createSharedMemory("rsclient_terrain_data", 865280);
 
+		System.out.println("attempting to start runnables:");
 		executorService.execute(myRunnableSender);
 
 		executorService1.execute(myRunnableReciever);
