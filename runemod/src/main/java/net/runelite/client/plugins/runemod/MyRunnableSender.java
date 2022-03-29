@@ -18,7 +18,7 @@ public class MyRunnableSender implements Runnable {
 
 
     public InetAddress clientIPAddress;
-    private int port = 8884;
+    private int port = 8888;
     private DatagramSocket serverSocket;
     private byte[] sendData = new byte[1024];
     private byte[] receiveData = new byte[1024];
@@ -46,9 +46,9 @@ public class MyRunnableSender implements Runnable {
     @SneakyThrows
     public void onStart() {
         System.out.println("Runnable Sender start attempt");
-        serverSocket = new DatagramSocket(port, InetAddress.getByName("127.0.0.141")); //our address from which we are sending stuff
+        serverSocket = new DatagramSocket(port, InetAddress.getByName("127.0.0.101")); //our address from which we are sending stuff
 
-		clientIPAddress = InetAddress.getByName("127.0.0.140"); //where we send stuff to
+		clientIPAddress = InetAddress.getByName("127.0.0.100"); //where we send stuff to
 
 		serverSocket.setReuseAddress(true);
         receiveData = new byte[1024];

@@ -1,7 +1,6 @@
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
+import org.gradle.internal.impldep.org.apache.commons.io.FileUtils
 import org.gradle.kotlin.dsl.extra
 import org.gradle.kotlin.dsl.get
 import org.json.JSONArray
@@ -11,7 +10,6 @@ import java.nio.file.Paths
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.collections.ArrayList
 
 
 open class BootstrapTask : DefaultTask() {
@@ -30,11 +28,29 @@ open class BootstrapTask : DefaultTask() {
         return JSONObject("{\"plugins\":$bootstrapFile}").getJSONArray("plugins")
     }
 
+    open fun deleteDirectory(directory: File): Boolean {
+        if (directory.exists()) {
+            val files = directory.listFiles()
+            if (null != files) {
+                for (i in files.indices) {
+                    if (files[i].isDirectory) {
+                        deleteDirectory(files[i])
+                    } else {
+                        files[i].delete()
+                    }
+                }
+            }
+        }
+        return directory.delete()
+    }
+
     @TaskAction
     fun boostrap() {
         if (project == project.rootProject) {
             val bootstrapDir = File("${project.projectDir}")
             val bootstrapReleaseDir = File("${project.projectDir}/release")
+
+            deleteDirectory(File("${project.projectDir}/release"))
 
             bootstrapDir.mkdirs()
             bootstrapReleaseDir.mkdirs()

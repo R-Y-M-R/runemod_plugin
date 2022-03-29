@@ -157,11 +157,10 @@ public class RuneMod extends Plugin
 		rsclient_ui_pixels_shared_memory.createSharedMemory("rsclient_ui_pixels", ((screenSize.height*screenSize.width*4)+4));
 		rsclient_terrain_shared_memory.createSharedMemory("rsclient_terrain_data", 865280);
 
-		System.out.println("attempting to start runnables:");
 		executorService.execute(myRunnableSender);
 
-		executorService1.execute(myRunnableReciever);
 		myRunnableReciever.clientCanvas = client.getCanvas();
+		executorService1.execute(myRunnableReciever);
 		client.setPrintMenuActions(true);
 
 		keyManager.registerKeyListener(hotkeyListenerq);
@@ -759,7 +758,6 @@ public Component component = new Component() {
 			//client.setCameraY(client.getCameraY()+100);
 		}
 	};
-
 
 
 	private static final Keybind myKeybindR = new Keybind(KeyEvent.VK_R, InputEvent.ALT_DOWN_MASK);
@@ -1840,15 +1838,18 @@ public Component component = new Component() {
 	{
 	}
 
+/*
 	@Subscribe
 	private void onDrawFinished_Ui(DrawFinished_Ui event)
 	{
-		SendPerFramePacket();
+		//SendPerFramePacket();
 	}
+*/
 
 	@Subscribe
 	private void onClientTick(ClientTick event)
 	{
+		SendPerFramePacket();
 /*		WorldPoint area0 = new WorldPoint(1988, 5111, 0);
 		WorldPoint playerLocation = client.getLocalPlayer().getWorldLocation();
 
