@@ -760,15 +760,6 @@ public Component component = new Component() {
 		}
 	};
 
-	@Subscribe
-	private void onTerrainLoaded(TerrainLoaded event)
-	{
-		SendPerFramePacket();
-
-			//clientThread.wait(1,1);
-
-		sendTerrainData();
-	}
 
 
 	private static final Keybind myKeybindR = new Keybind(KeyEvent.VK_R, InputEvent.ALT_DOWN_MASK);
