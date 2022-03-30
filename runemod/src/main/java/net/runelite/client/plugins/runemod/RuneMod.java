@@ -466,16 +466,16 @@ public class RuneMod extends Plugin
 		int tileOriginalPlaneBufferSize = 43264;
 
 		int terrainDataBufferSize = 4+tileHeightsBufferSize+
-			tileSettingsBufferSize+
-			tileColorsBufferSize+
-			tileTextureIdsBufferSize+
-			tileRotationsBufferSize+
-			tileOverlayColorsBufferSize+
-			tileOverlayShapesBufferSize+
-			tileOverlayTextureIdsBufferSize+
-			flatTileBufferSize+
-			tileShouldDrawBufferSize+
-			tileOriginalPlaneBufferSize;
+				tileSettingsBufferSize+
+				tileColorsBufferSize+
+				tileTextureIdsBufferSize+
+				tileRotationsBufferSize+
+				tileOverlayColorsBufferSize+
+				tileOverlayShapesBufferSize+
+				tileOverlayTextureIdsBufferSize+
+				flatTileBufferSize+
+				tileShouldDrawBufferSize+
+				tileOriginalPlaneBufferSize;
 
 		int noTerrainDataTypes = 9;
 
@@ -699,12 +699,12 @@ public class RuneMod extends Plugin
 		System.out.print(" "+b+" ");*/
 	}
 
-public Component component = new Component() {
-	@Override
-	public void addNotify() {
-		super.addNotify();
-	}
-};
+	public Component component = new Component() {
+		@Override
+		public void addNotify() {
+			super.addNotify();
+		}
+	};
 
 	private static final Keybind myKeybindW = new Keybind(KeyEvent.VK_W, InputEvent.SHIFT_DOWN_MASK);
 	private final HotkeyListener hotkeyListenerw = new HotkeyListener(() -> myKeybindW)
@@ -1110,8 +1110,8 @@ public Component component = new Component() {
 			Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
 			int tilePlane = tile.getPlane();
-			int tileX = tile.getX();
-			int tileY = tile.getY();
+			int tileX = tile.getSceneLocation().getX();
+			int tileY = tile.getSceneLocation().getY();
 			long tag = event.getWallObject().getHash();
 			actorSpawnPacket.writeByte(5); //write tileObject data type
 			actorSpawnPacket.writeByte(tilePlane);
@@ -1149,12 +1149,12 @@ public Component component = new Component() {
 			}
 			int objectDefinitionId = wallObjectspawned.getWallObject().getId();
 			int plane = tile.getPlane();
-			int tileX = tile.getX();
-			int tileY = tile.getY();
+			int tileX = tile.getSceneLocation().getX();
+			int tileY = tile.getSceneLocation().getY();
 
 			byte[][][] tileSettings = client.getTileSettings();
 
-			if (plane < Constants.MAX_Z - 1 && (tileSettings[1][tile.getX()][tile.getY()] & TILE_FLAG_BRIDGE) == TILE_FLAG_BRIDGE)
+			if (plane < Constants.MAX_Z - 1 && (tileSettings[1][tile.getSceneLocation().getX()][tile.getSceneLocation().getY()] & TILE_FLAG_BRIDGE) == TILE_FLAG_BRIDGE)
 			{
 				plane = plane-1;
 				plane = plane > 3 ? 3 : plane < 0 ? 0 : plane;
@@ -1259,12 +1259,12 @@ public Component component = new Component() {
 			}
 			int objectDefinitionId = decorativeObjectSpawned.getDecorativeObject().getId();
 			int plane = tile.getPlane();
-			int tileX = tile.getX();
-			int tileY = tile.getY();
+			int tileX = tile.getSceneLocation().getX();
+			int tileY = tile.getSceneLocation().getY();
 			tile.getRenderLevel();
 			byte[][][] tileSettings = client.getTileSettings();
 
-			if (plane < Constants.MAX_Z - 1 && (tileSettings[1][tile.getX()][tile.getY()] & TILE_FLAG_BRIDGE) == TILE_FLAG_BRIDGE)
+			if (plane < Constants.MAX_Z - 1 && (tileSettings[1][tile.getSceneLocation().getX()][tile.getSceneLocation().getY()] & TILE_FLAG_BRIDGE) == TILE_FLAG_BRIDGE)
 			{
 				plane = plane-1;
 				plane = plane > 3 ? 3 : plane < 0 ? 0 : plane;
@@ -1363,8 +1363,8 @@ public Component component = new Component() {
 				}
 			}
 			int plane = tile.getPlane();
-			int tileX = tile.getX();
-			int tileY = tile.getY();
+			int tileX = tile.getSceneLocation().getX();
+			int tileY = tile.getSceneLocation().getY();
 			int height = getTileHeightV2(client, tile.getLocalLocation(), gameObjectSpawned.getTile().getRenderLevel()) * -1;
 			long tag = gameObjectSpawned.getGameObject().getHash();
 			int cycleStart = 0;
@@ -1410,7 +1410,7 @@ public Component component = new Component() {
 				Model gameObjectModel = gameObject.getModel();
 				if (gameObjectModel!=null) {
 					if (gameObjectModel.getTrianglesCount() > 0) {
-						if (gameObject.getWorldLocation().getY() == tilePos.getY() && gameObject.getWorldLocation().getX() == tilePos.getX()) { //this location check to to prevent getting the same object twice when it is scaled up over multiple squares
+						if (gameObject.getSceneLocation().getY() == tilePos.getY() && gameObject.getSceneLocation().getX() == tilePos.getX()) { //this location check to to prevent getting the same object twice when it is scaled up over multiple squares
 						}
 						int orientation = (gameObject.getOrientation().getAngle() / 512) * 90;
 						int scale = gameObjectModel.getXYZMag();
@@ -1453,8 +1453,8 @@ public Component component = new Component() {
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
 		int tilePlane = tile.getPlane();
-		int tileX = tile.getX();
-		int tileY = tile.getY();
+		int tileX = tile.getSceneLocation().getX();
+		int tileY = tile.getSceneLocation().getY();
 		long tag = event.getGameObject().getHash();
 		actorSpawnPacket.writeByte(4); //write tileObject data type
 		actorSpawnPacket.writeByte(tilePlane);
@@ -1469,46 +1469,46 @@ public Component component = new Component() {
 	@Subscribe
 	private void onGroundObjectSpawned(GroundObjectSpawned groundObjectSpawned) { //GroundObject is aka FloorDecoration
 		clientThread.invokeLater(() ->
-				{
-					int isBridgeTile = 0;
-					Tile tile;
-					tile = groundObjectSpawned.getTile();
+		{
+			int isBridgeTile = 0;
+			Tile tile;
+			tile = groundObjectSpawned.getTile();
 
-					Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
-					int tileObjectModelType = getObjModelTypeFromFlags(groundObjectSpawned.getGroundObject().getConfig());
-					int var4 = (groundObjectSpawned.getGroundObject().getConfig() >> 6) & 3;
-					int objectOrientationA = var4 * 512;
-					int objectOrientationB = -1;
-					int objectDefinitionId = groundObjectSpawned.getGroundObject().getId();
-					int plane = tile.getPlane();
-					int tileX = tile.getX();
-					int tileY = tile.getY();
-					int height = getTileHeightV2(client, tile.getLocalLocation(), groundObjectSpawned.getTile().getRenderLevel()) * -1;
-					long tag = groundObjectSpawned.getGroundObject().getHash();
-					int cycleStart = 0;
-					int frame = 0;
-					actorSpawnPacket.writeByte(4); //write tileObject data type
-					actorSpawnPacket.writeByte(tileObjectModelType);
-					actorSpawnPacket.writeByte(var4);
-					actorSpawnPacket.writeShort(objectOrientationA);
-					actorSpawnPacket.writeShort(objectOrientationB);
-					actorSpawnPacket.writeShort(objectDefinitionId);
-					actorSpawnPacket.writeByte(plane);
-					actorSpawnPacket.writeByte(tileX);
-					actorSpawnPacket.writeByte(tileY);
-					int tileMinPlane = tile.getPhysicalLevel();
-					actorSpawnPacket.writeByte(tileMinPlane);
-					actorSpawnPacket.writeShort(height);
-					actorSpawnPacket.writeLong(tag);
-					actorSpawnPacket.writeShort(cycleStart);
-					actorSpawnPacket.writeShort(frame);
-					int offsetX = 0;
-					int offsetY = 0;
-					actorSpawnPacket.writeShort(offsetX);
-					actorSpawnPacket.writeShort(offsetY);
+			Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
+			int tileObjectModelType = getObjModelTypeFromFlags(groundObjectSpawned.getGroundObject().getConfig());
+			int var4 = (groundObjectSpawned.getGroundObject().getConfig() >> 6) & 3;
+			int objectOrientationA = var4 * 512;
+			int objectOrientationB = -1;
+			int objectDefinitionId = groundObjectSpawned.getGroundObject().getId();
+			int plane = tile.getPlane();
+			int tileX = tile.getSceneLocation().getX();
+			int tileY = tile.getSceneLocation().getY();
+			int height = getTileHeightV2(client, tile.getLocalLocation(), groundObjectSpawned.getTile().getRenderLevel()) * -1;
+			long tag = groundObjectSpawned.getGroundObject().getHash();
+			int cycleStart = 0;
+			int frame = 0;
+			actorSpawnPacket.writeByte(4); //write tileObject data type
+			actorSpawnPacket.writeByte(tileObjectModelType);
+			actorSpawnPacket.writeByte(var4);
+			actorSpawnPacket.writeShort(objectOrientationA);
+			actorSpawnPacket.writeShort(objectOrientationB);
+			actorSpawnPacket.writeShort(objectDefinitionId);
+			actorSpawnPacket.writeByte(plane);
+			actorSpawnPacket.writeByte(tileX);
+			actorSpawnPacket.writeByte(tileY);
+			int tileMinPlane = tile.getPhysicalLevel();
+			actorSpawnPacket.writeByte(tileMinPlane);
+			actorSpawnPacket.writeShort(height);
+			actorSpawnPacket.writeLong(tag);
+			actorSpawnPacket.writeShort(cycleStart);
+			actorSpawnPacket.writeShort(frame);
+			int offsetX = 0;
+			int offsetY = 0;
+			actorSpawnPacket.writeShort(offsetX);
+			actorSpawnPacket.writeShort(offsetY);
 
-					myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorSpawn");
-				});
+			myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorSpawn");
+		});
 
 /*		counter1 = counter1+1;
 		SendLowLatencyData();
@@ -1590,95 +1590,104 @@ public Component component = new Component() {
 		return Arrays.copyOfRange(buffer.getPayload(), 0, buffer.getOffset());
 	}
 
+	public HashMap<Actor, Integer>  moveMentSequenceFrames  = new HashMap<Actor, Integer>();
 
+	public int getLastFrameMovementSequence(Actor actor) {
+		if (moveMentSequenceFrames.containsKey(actor)) {
+			return moveMentSequenceFrames.get(actor);
+		} else return -1;
+	}
+	public void setLastFrameMovementSequence(Actor actor, int sequenceId) {
+		moveMentSequenceFrames.put(actor, sequenceId);
+	}
 
 	@Subscribe
 	private void onAnimationChanged(AnimationChanged event) {
 		//int actorId = event.getActor().getRSInteracting();
 		clientThread.invokeLater(() ->
 		{
-		clientThread.invokeLater(() ->
-		{
-			Buffer actorAnimChangePacket = client.createBuffer(new byte[20]);
-
-			int newAnimationID = -1;
-			int actorID = -1;
-			int actorType = -1;
-
-			int animation = event.getActor().getAnimation();
-
-			if ((event.getActor() instanceof NPC))
+			clientThread.invokeLater(() ->
 			{
-				final NPC npc = (NPC) event.getActor();
+				Buffer actorAnimChangePacket = client.createBuffer(new byte[20]);
 
-				//set spot, pose or normal sequence depending on which is not -1;
-				if (npc.getAnimation()!= -1) {
-					newAnimationID = npc.getAnimation();
-				}else {
-					if (npc.getPoseAnimation() != -1) {
-						if(npc.getPoseAnimation() !=  npc.getLastFrameMovementSequence()) {
-							newAnimationID = npc.getPoseAnimation();
-							npc.setLastFrameMovementSequence(npc.getPoseAnimation());
-						} else {
-							return;
-						}
-					}else
-					if (npc.getGraphic() != -1) {
-						newAnimationID = npc.getGraphic();
-					} else {
-						return;
-					}
-				}
-				npc.setLastFrameMovementSequence(newAnimationID);
+				int newAnimationID = -1;
+				int actorID = -1;
+				int actorType = -1;
 
-				//System.out.println("animationchange to: " + newAnimationID);
+				int animation = event.getActor().getAnimation();
 
-				actorID = npc.getIndex();
-				actorType = 1;
-
-				actorAnimChangePacket.writeShort(newAnimationID);//write sequenceDef id;
-				actorAnimChangePacket.writeShort(actorID);//write actor id;
-				actorAnimChangePacket.writeByte(actorType); //write actor type. 1 = npc;
-				//Util.sleep(1);
-				myRunnableSender.sendBytes(trimmedBufferBytes(actorAnimChangePacket), "ActorAnimationChange");
-			} else {
-				if ((event.getActor() instanceof Player))
+				if ((event.getActor() instanceof NPC))
 				{
-					final Player player = (Player) event.getActor();
+					final NPC npc = (NPC) event.getActor();
 
 					//set spot, pose or normal sequence depending on which is not -1;
-					if (player.getAnimation()!= -1) {
-						newAnimationID = player.getAnimation();
+					if (npc.getAnimation()!= -1) {
+						newAnimationID = npc.getAnimation();
 					}else {
-						if (player.getPoseAnimation() != -1) {
-							if(player.getPoseAnimation() !=  player.getLastFrameMovementSequence()) {
-								newAnimationID = player.getPoseAnimation();
-								player.setLastFrameMovementSequence(player.getPoseAnimation());
+						if (npc.getPoseAnimation() != -1) {
+							if(npc.getPoseAnimation() !=  getLastFrameMovementSequence(npc)) {
+								newAnimationID = npc.getPoseAnimation();
+								setLastFrameMovementSequence(npc, npc.getPoseAnimation());
 							} else {
 								return;
 							}
 						}else
-						if (player.getGraphic() != -1) {
-							newAnimationID = player.getGraphic();
+						if (npc.getGraphic() != -1) {
+							newAnimationID = npc.getGraphic();
 						} else {
 							return;
 						}
 					}
-					player.setLastFrameMovementSequence(newAnimationID);
+					setLastFrameMovementSequence(npc, newAnimationID);
 
 					//System.out.println("animationchange to: " + newAnimationID);
 
-					actorID = player.getPlayerId();
-					actorType = 2;
+					actorID = npc.getIndex();
+					actorType = 1;
 
 					actorAnimChangePacket.writeShort(newAnimationID);//write sequenceDef id;
 					actorAnimChangePacket.writeShort(actorID);//write actor id;
 					actorAnimChangePacket.writeByte(actorType); //write actor type. 1 = npc;
-
+					//Util.sleep(1);
 					myRunnableSender.sendBytes(trimmedBufferBytes(actorAnimChangePacket), "ActorAnimationChange");
+				} else {
+					if ((event.getActor() instanceof Player))
+					{
+						final Player player = (Player) event.getActor();
+
+						//set spot, pose or normal sequence depending on which is not -1;
+						if (player.getAnimation()!= -1) {
+							newAnimationID = player.getAnimation();
+						}else {
+							if (player.getPoseAnimation() != -1) {
+								if(player.getPoseAnimation() !=  getLastFrameMovementSequence(player)) {
+									newAnimationID = player.getPoseAnimation();
+									setLastFrameMovementSequence(player, player.getPoseAnimation());
+								} else {
+									return;
+								}
+							}else
+							if (player.getGraphic() != -1) {
+								newAnimationID = player.getGraphic();
+							} else {
+								return;
+							}
+						}
+						setLastFrameMovementSequence(player, newAnimationID);
+
+						//System.out.println("animationchange to: " + newAnimationID);
+
+						actorID = player.getPlayerId();
+						actorType = 2;
+
+						actorAnimChangePacket.writeShort(newAnimationID);//write sequenceDef id;
+						actorAnimChangePacket.writeShort(actorID);//write actor id;
+						actorAnimChangePacket.writeByte(actorType); //write actor type. 1 = npc;
+
+						myRunnableSender.sendBytes(trimmedBufferBytes(actorAnimChangePacket), "ActorAnimationChange");
+					}
 				}
-			}
-		});
+			});
 		});
 	}
 
@@ -1690,8 +1699,8 @@ public Component component = new Component() {
 			Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
 			int tilePlane = event.getTile().getPlane();
-			int tileX = event.getTile().getX();
-			int tileY = event.getTile().getY();
+			int tileX = event.getTile().getSceneLocation().getX();
+			int tileY = event.getTile().getSceneLocation().getY();
 			int height = Perspective.getTileHeight(client, event.getTile().getLocalLocation(), client.getPlane()) * -1;
 			int itemDefinitionId = event.getItem().getId();
 			int itemQuantity = event.getItem().getQuantity();
@@ -1712,8 +1721,8 @@ public Component component = new Component() {
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
 		int tilePlane = event.getTile().getPlane();
-		int tileX = event.getTile().getX();
-		int tileY = event.getTile().getY();
+		int tileX = event.getTile().getSceneLocation().getX();
+		int tileY = event.getTile().getSceneLocation().getY();
 		int itemDefinitionId = event.getItem().getId();
 		actorSpawnPacket.writeByte(3); //write tileItem data type
 		actorSpawnPacket.writeByte(tilePlane);
@@ -1765,7 +1774,7 @@ public Component component = new Component() {
 			actorSpawnPacket.writeInt(equipmentIds[i]);
 		}
 
-		int[] bodyColors = player.getPlayerComposition().getBodyPartColours();
+		int[] bodyColors = player.getPlayerComposition().getColors();
 		for (int i = 0; i < 5; i++) //bodyColors
 		{
 			actorSpawnPacket.writeByte(bodyColors[i]);
@@ -1774,7 +1783,8 @@ public Component component = new Component() {
 		if (player.getPlayerComposition().isFemale()) isFemale = 1;
 		actorSpawnPacket.writeByte(isFemale); //isFemale
 
-		actorSpawnPacket.writeInt(player.getPlayerComposition().getTransformedNpcId()); //npcTransformID
+		//temp actorSpawnPacket.writeInt(player.getPlayerComposition().getTransformedNpcId()); //npcTransformID
+		actorSpawnPacket.writeInt(-1); //npcTransformID //temp
 
 		System.out.println("player change. id: "+InstanceId);
 		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorSpawn");
@@ -1795,7 +1805,7 @@ public Component component = new Component() {
 			actorSpawnPacket.writeInt(equipmentIds[i]);
 		}
 
-		int[] bodyColors = player.getPlayerComposition().getBodyPartColours();
+		int[] bodyColors = player.getPlayerComposition().getColors();
 		for (int i = 0; i < 5; i++) //bodyColors
 		{
 			actorSpawnPacket.writeByte(bodyColors[i]);
@@ -1804,7 +1814,8 @@ public Component component = new Component() {
 		if (player.getPlayerComposition().isFemale()) isFemale = 1;
 		actorSpawnPacket.writeByte(isFemale); //isFemale
 
-		actorSpawnPacket.writeInt(player.getPlayerComposition().getTransformedNpcId()); //npcTransformID
+		//temp actorSpawnPacket.writeInt(player.getPlayerComposition().getTransformedNpcId()); //npcTransformID
+		actorSpawnPacket.writeInt(-1); //npcTransformID //temp
 
 		System.out.println("player spawn. id: "+InstanceId);
 		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorSpawn");
@@ -1827,10 +1838,10 @@ public Component component = new Component() {
 	}
 
 	private void sendPlaneChanged() {
-			System.out.println("PlaneChanged");
-			Buffer buffer = client.createBuffer(new byte[4]);
-			buffer.writeByte(clientPlane);
-			myRunnableSender.sendBytes(buffer.getPayload(), "PlaneChanged");
+		System.out.println("PlaneChanged");
+		Buffer buffer = client.createBuffer(new byte[4]);
+		buffer.writeByte(clientPlane);
+		myRunnableSender.sendBytes(buffer.getPayload(), "PlaneChanged");
 	}
 
 	@Subscribe
@@ -1897,7 +1908,8 @@ public Component component = new Component() {
 		int clientBaseX = client.getBaseX();
 		int clientBaseY = client.getBaseY();
 		int clientPlane = client.getPlane();
-		int maxVisiblePlane = client.getMaxScenePlane();
+		//temp int maxVisiblePlane = client.getMaxScenePlane();
+		int maxVisiblePlane = 3; //temp
 		int clientCycle = client.getGameCycle();
 
 		int playerLocalX = client.getLocalPlayer().getLocalLocation().getX();
@@ -1954,7 +1966,7 @@ public Component component = new Component() {
 					if (npc.getGraphic() != -1) {
 						//npcAnimation = npc.getGraphic();
 						npcAnimationFrame = npc.getSpotAnimFrame();
-						npcAnimationFrameCycle = npc.getSpotAnimationFrameCycle();
+						//temp npcAnimationFrameCycle = npc.getSpotAnimationFrameCycle();
 					}
 				}
 
@@ -2002,7 +2014,7 @@ public Component component = new Component() {
 					if (player.getGraphic() != -1) {
 						//npcAnimation = npc.getGraphic();
 						animationFrame = player.getGraphic();
-						animationFrameCycle = player.getSpotAnimationFrameCycle();
+						//temp animationFrameCycle = player.getSpotAnimationFrameCycle();
 					}
 				}
 
@@ -2034,8 +2046,8 @@ public Component component = new Component() {
 		}
 
 
-/*		int worldX = client.getLocalPlayer().getWorldLocation().getX();
-		int worldY = client.getLocalPlayer().getWorldLocation().getY();
+/*		int worldX = client.getLocalPlayer().getSceneLocation().getX();
+		int worldY = client.getLocalPlayer().getSceneLocation().getY();
 		int worldZ = client.getLocalPlayer().getWorldLocation().getPlane();
 
 		int camX = client.getCameraX();
