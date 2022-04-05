@@ -434,6 +434,9 @@ public class MyRunnableSender implements Runnable {
             case "PlaneChanged":
                 dataTypeByte = 26;
                 break;
+            case "WindowEvent":
+                dataTypeByte = 27;
+                break;
             default:
                 System.out.println("no match");
                 break;

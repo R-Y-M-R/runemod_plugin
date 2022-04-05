@@ -17,6 +17,7 @@ public class MyRunnableReciever implements Runnable {
     AtomicReference atomicString = new AtomicReference("nothing yet");
     private boolean firstrun = true;
 
+    public RuneMod runemod;
     private int port = 9999;
     private DatagramSocket serverSocketReciever;
     private byte[] sendData =  new byte[1024];
@@ -83,7 +84,7 @@ public class MyRunnableReciever implements Runnable {
         while (true) {
             if (firstrun == true)onStart();
 
-            System.out.println("waiting for client connection");
+            //System.out.println("waiting for client connection");
             waitForPacket();
 
             byte[] bytes = receivePacket.getData();
@@ -95,7 +96,7 @@ public class MyRunnableReciever implements Runnable {
                     System.out.println("Client Connected");
                     MyRunnableSender.clientInitialized = true;
                     MyRunnableSender.clientConnected = true;
-                    RuneMod.clientJustConnected = true;
+                    runemod.clientJustConnected = true;
 
                     receiveData = new byte[1024];
                     sendData = new byte[1024];
@@ -104,7 +105,7 @@ public class MyRunnableReciever implements Runnable {
                     System.out.println("Client Disconnected");
                     MyRunnableSender.clientInitialized = false;
                     MyRunnableSender.clientConnected = false;
-                    RuneMod.clientJustConnected = false;
+                    runemod.clientJustConnected = false;
 
                     receiveData = new byte[1024];
                     sendData = new byte[1024];
@@ -154,7 +155,7 @@ public class MyRunnableReciever implements Runnable {
             }
 
             //String sentence = new String(receivePacket.getData());
-            System.out.println("RECEIVED opcode: " + opCode);
+            //System.out.println("RECEIVED opcode: " + opCode);
 			if (opCode == 2) { //disconnection indication
 
 			} else {

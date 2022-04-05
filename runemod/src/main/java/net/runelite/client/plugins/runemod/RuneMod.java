@@ -24,6 +24,7 @@
  */
 package net.runelite.client.plugins.runemod;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Provides;
 import lombok.SneakyThrows;
 import net.runelite.api.*;
@@ -39,25 +40,31 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.ClientUI;
+import net.runelite.client.ui.NavigationButton;
+import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.HotkeyListener;
+import net.runelite.client.util.ImageUtil;
+import net.runelite.client.util.LinkBrowser;
 import org.pf4j.Extension;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.awt.*;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.IOException;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.net.URL;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+
 import static net.runelite.api.Constants.TILE_FLAG_BRIDGE;
+import static net.runelite.client.RuneLite.SCREENSHOT_DIR;
 
 //import net.runelite.api.VarClientInt;
 //import net.runelite.api.Varbits;
@@ -118,9 +125,17 @@ public class RuneMod extends Plugin
 	MyRunnableSender myRunnableSender = new MyRunnableSender();
 	ExecutorService executorService = Executors.newFixedThreadPool(1);
 	ExecutorService executorService1 = Executors.newFixedThreadPool(1);
+	ExecutorService executorService2 = Executors.newFixedThreadPool(1);
 	MyRunnableReciever myRunnableReciever = new MyRunnableReciever();
 
 	ObjectComposition sourceObjDef;
+
+
+	@Inject
+	private ClientToolbar clientToolbar;
+
+	@Inject
+	private OverlayManager overlayManager;
 
 	@Inject
 	private Client client;
@@ -137,8 +152,196 @@ public class RuneMod extends Plugin
 	@Inject
 	private ClientUI clientUI;
 
+/*	@Subscribe
+	public void onFocusChanged(FocusChanged focusChanged)
+	{
+		if (focusChanged.isFocused() == false)
+		{
+			System.out.println("mousePressed");
+			Buffer buffer = client.createBuffer(new byte[20]);
+			buffer.writeByte(10);
+			myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+		}
+		if (focusChanged.isFocused() == true)
+		{
+			System.out.println("focus");
+			Buffer buffer = client.createBuffer(new byte[20]);
+			buffer.writeByte(11);
+			myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+		}
+	}*/
+
+	public Boolean runeModToggled = true;
+
+
+	public void toggleRuneModOverlayOn(){runeModToggled = false; toggleRuneModOverlay();}//set toggled val to opposit because we are abouit to toggle it
+	public void toggleRuneModOverlayOff(){runeModToggled = true; toggleRuneModOverlay();} //set toggled val to opposit because we are abouit to toggle it
+	public void toggleRuneModOverlay(){
+		runeModToggled = !runeModToggled;
+		if (runeModToggled) {
+			System.out.println("Toggled runemod ON");
+			Buffer buffer = client.createBuffer(new byte[20]);
+			buffer.writeByte(101);
+			buffer.writeShort(client.getCanvas().getLocationOnScreen().x);
+			buffer.writeShort(client.getCanvas().getLocationOnScreen().y);
+			buffer.writeShort(client.getCanvas().getWidth());
+			buffer.writeShort(client.getCanvas().getHeight());
+			myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+		} else {
+				System.out.println("Toggled runemod OFF");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(100);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+		}
+	}
+
 	@Override
 	protected void startUp() throws IOException {
+
+		//setup runemod toggler
+		NavigationButton titleBarButton;
+
+		final BufferedImage iconImage = ImageUtil.loadImageResource(getClass(), "runemod.png");
+
+		titleBarButton = NavigationButton.builder()
+				.tab(false)
+				.tooltip("Toggle RuneMod visibility")
+				.icon(iconImage)
+				.onClick(this::toggleRuneModOverlay)
+				.popup(ImmutableMap
+						.<String, Runnable>builder()
+						.put("Open screenshot folder...", () ->
+						{
+							LinkBrowser.open(SCREENSHOT_DIR.toString());
+						})
+						.build())
+				.build();
+
+		clientToolbar.addNavigation(titleBarButton);
+
+
+		//setup window event listeners
+		ClientUI.getFrame().addComponentListener(new ComponentAdapter() {
+			public void componentMoved(ComponentEvent e) {
+				clientThread.invokeLater(() ->
+				{
+					System.out.println("WindowMoved" + client.getCanvas().getLocationOnScreen());
+					Buffer buffer = client.createBuffer(new byte[20]);
+					buffer.writeByte(0);
+					buffer.writeShort(client.getCanvas().getLocationOnScreen().x);
+					buffer.writeShort(client.getCanvas().getLocationOnScreen().y);
+					myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+				});
+			}
+		});
+		ClientUI.getFrame().addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				clientThread.invokeLater(() ->
+				{
+					new java.util.Timer().schedule(
+							new java.util.TimerTask() {
+								@Override
+								public void run() {
+									System.out.println("WindowResized"+ client.getCanvas().getWidth()+" "+ client.getCanvas().getHeight());
+									Buffer buffer = client.createBuffer(new byte[20]);
+									buffer.writeByte(1);
+									buffer.writeShort(client.getCanvas().getWidth());
+									buffer.writeShort(client.getCanvas().getHeight());
+									myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+								}
+							},
+							100
+					);
+				});
+			}
+		});
+
+		ClientUI.getFrame().addWindowListener(new WindowListener() {
+			@Override
+			public void windowOpened(WindowEvent e) {
+				System.out.println("windowOpened");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(2);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+
+			@Override
+			public void windowClosing(WindowEvent e) {
+				System.out.println("windowClosing");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(3);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				System.out.println("windowClosed");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(4);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+
+			@Override
+			public void windowIconified(WindowEvent e) {
+				System.out.println("windowIconified");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(5);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+
+			@Override
+			public void windowDeiconified(WindowEvent e) {
+				System.out.println("windowDeiconified");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(6);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+
+			@Override
+			public void windowActivated(WindowEvent e) {
+				System.out.println("windowActivated");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(7);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+
+			@Override
+			public void windowDeactivated(WindowEvent e) {
+				System.out.println("windowDeactivated");
+					Buffer buffer = client.createBuffer(new byte[20]);
+					buffer.writeByte(8);
+					myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+			}
+		});
+
+
+
+
+		Toolkit.getDefaultToolkit().addAWTEventListener(new AWTEventListener() {
+			public void eventDispatched(AWTEvent event) {
+				if(event instanceof MouseEvent){
+					MouseEvent evt = (MouseEvent)event;
+					if(evt.getID() == MouseEvent.MOUSE_PRESSED){
+						System.out.println("mousePressed");
+						Buffer buffer = client.createBuffer(new byte[20]);
+						buffer.writeByte(9);
+						myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+					}
+				}
+			}
+		}, AWTEvent.MOUSE_EVENT_MASK);
+
+		executorService2.execute(new RuneMod_Launcher(new RuneMod_statusUI()));
+
+
+		//downloadZip("https://runemod.net/app_download/runemod_master.zip", "runemod_master.zip");
+/*		RuneMod_status runeMod_status = new RuneMod_status();
+		executorService2.execute(runeMod_status);*/
+/*		SwingUtilities.invokeLater(() -> {
+			JOptionPane.showMessageDialog(ClientUI.getFrame(), "message urrr", "title err", JOptionPane.INFORMATION_MESSAGE);
+		});*/
+
+
 
 		client.getCanvas().addMouseListener(new MouseAdapter()
 		{
@@ -160,6 +363,7 @@ public class RuneMod extends Plugin
 		executorService.execute(myRunnableSender);
 
 		myRunnableReciever.clientCanvas = client.getCanvas();
+		myRunnableReciever.runemod = this;
 		executorService1.execute(myRunnableReciever);
 		client.setPrintMenuActions(true);
 
@@ -174,6 +378,9 @@ public class RuneMod extends Plugin
 		// The clicked x & y coordinates (the last arguments) are not processed in the game or sent to Jagex, so they don't have to be real.
 	}
 
+	public void launchRuneMod() {
+
+	}
 
 	private byte[] runGetSkeletonBytes (int id) {
 		IndexDataBase var0 = client.getSequenceDefinition_animationsArchive();
@@ -368,7 +575,6 @@ public class RuneMod extends Plugin
 			}
 		}
 	}
-
 
 	private static final Keybind myKeybindQ = new Keybind(KeyEvent.VK_Q, InputEvent.ALT_DOWN_MASK);
 	private final HotkeyListener hotkeyListenerq = new HotkeyListener(() -> myKeybindQ)
@@ -652,7 +858,7 @@ public class RuneMod extends Plugin
 		int b = col & 0xFF;
 	}
 
-	@SneakyThrows
+	//@SneakyThrows
 	private void createSharedMemory () {
 /*		ByteBuffer buf = ByteBuffer.allocateDirect(10);
 		directMemoryBuffer = new DirectMemoryBuffer(buf,0,10);
@@ -706,20 +912,95 @@ public class RuneMod extends Plugin
 		}
 	};
 
+	public void downloadZip(String URL, String fileName) {
+		RuneMod_statusUI runeMod_status = new RuneMod_statusUI();
+		//executorService2.execute(runeMod_status);
+
+
+		try {
+			URL url = new URL(URL);
+			BufferedInputStream bis = new BufferedInputStream(url.openStream());
+			FileOutputStream fis = new FileOutputStream(System.getProperty("user.home") + "/" + fileName);
+
+			byte[] buffer = new byte[32768];
+			int count = 0;
+
+			int counter = 0;
+			while ((count = bis.read(buffer, 0, buffer.length)) != -1) {
+				counter++;
+				System.out.println(counter);
+				runeMod_status.message.setText("Progress"+counter);
+				fis.write(buffer, 0, count);
+			}
+
+
+/*			Path root = Paths.get(System.getProperty("user.home"));
+			try (InputStream is = Files.newInputStream(Paths.get(System.getProperty("user.home") + "/" + fileName));
+				 ZipInputStream zis = new ZipInputStream(is)) {
+				ZipEntry entry = zis.getNextEntry();
+				while (entry != null) {
+					Path path = root.resolve(entry.getName()).normalize();
+					if (!path.startsWith(root)) {
+						throw new IOException("Invalid ZIP");
+					}
+					if (entry.isDirectory()) {
+						Files.createDirectories(path);
+					} else {
+						try (OutputStream os = Files.newOutputStream(path)) {
+							byte[] buffer0 = new byte[1024];
+							int len;
+							while ((len = zis.read(buffer0)) > 0) {
+								os.write(buffer0, 0, len);
+							}
+						}
+					}
+					entry = zis.getNextEntry();
+				}
+				zis.closeEntry();
+			}*/
+
+
+			fis.close();
+			bis.close();
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	public void UnzipFile() throws IOException {
+
+	}
+
+
+
+
 	private static final Keybind myKeybindW = new Keybind(KeyEvent.VK_W, InputEvent.SHIFT_DOWN_MASK);
 	private final HotkeyListener hotkeyListenerw = new HotkeyListener(() -> myKeybindW)
 	{
+		@SneakyThrows
 		@Override
 		public void hotkeyPressed() //send terrain
 		{
-			int x = MouseInfo.getPointerInfo().getLocation().x - client.getCanvas().getLocationOnScreen().x;
-			int y = MouseInfo.getPointerInfo().getLocation().y - client.getCanvas().getLocationOnScreen().y;
-			var eventQ = Toolkit.getDefaultToolkit().getSystemEventQueue();
-			var mouseEventClick = new MouseEvent(client.getCanvas(),MouseEvent.MOUSE_PRESSED, System.currentTimeMillis() + 10, MouseEvent.BUTTON1, x,y, 0, false);
-			var mouseEventPosition = new MouseEvent(client.getCanvas(),MouseEvent.MOUSE_MOVED, System.currentTimeMillis() + 10, MouseEvent.NOBUTTON, x,y, 0, false);
-			var keyEventA = new KeyEvent(client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_A);
-			var keyEventB = new KeyEvent(client.getCanvas(), KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_B, (char) 66);
-			eventQ.postEvent(keyEventB);
+
+			//downloadZip("https://runemod.net/app_download/runemod_master.zip", "runemod_master.zip");
+
+/*			while(entry != null) {
+
+				System.out.println(entry.getName());
+				if (!entry.isDirectory()) {
+					// if the entry is a file, extracts it
+					System.out.println("===File===");
+
+				} else {
+					System.out.println("===Directory===");
+				}
+				zipIn.closeEntry();
+				entry = zipIn.getNextEntry();
+
+			}*/
+
 			//eventQ.postEvent(mouseEvent);
 
 
@@ -793,6 +1074,8 @@ public class RuneMod extends Plugin
 		iStack[iStackSize - 1] = 1;
 	}
 
+
+
 	@Subscribe
 	private void onGameTick(GameTick event) {
 		playerWorldPos = client.getLocalPlayer().getWorldLocation();
@@ -800,12 +1083,6 @@ public class RuneMod extends Plugin
 		//System.out.println("clientPixelsX = "+client.getGraphicsPixelsWidth());
 
 //		System.out.println("tick ahem");
-		if (clientJustConnected) {
-			libMeshIDs.clear();
-			sentInstanceIds.clear();
-			clientJustConnected = false;
-			//myRunnableSender.clientConnected = false;
-		}
 
 		LocalPoint localPos = client.getLocalPlayer().getLocalLocation();
 
@@ -1070,6 +1347,7 @@ public class RuneMod extends Plugin
 		}else
 		if (gamestate == GameState.LOGGED_IN)
 		{
+			toggleRuneModOverlayOn();
 			System.out.println("logged in...");
 			newEventTypeByte = 3;
 		}else
@@ -1084,6 +1362,22 @@ public class RuneMod extends Plugin
 			System.out.println("loading...");
 			newEventTypeByte = 5;
 			newRegionLoaded = true;
+		}else
+		if (gamestate == GameState.LOGIN_SCREEN)
+		{
+			toggleRuneModOverlayOff();
+		} else
+		if (gamestate == GameState.LOGIN_SCREEN_AUTHENTICATOR)
+		{
+			toggleRuneModOverlayOff();
+		}
+		if (gamestate == GameState.STARTING)
+		{
+			toggleRuneModOverlayOff();
+		}
+		if (gamestate == GameState.UNKNOWN)
+		{
+			toggleRuneModOverlayOff();
 		}
 
 		myRunnableSender.sendBytes(new byte[] {newEventTypeByte,0,0},"GameStateChanged");
@@ -1595,7 +1889,7 @@ public class RuneMod extends Plugin
 	public int getLastFrameMovementSequence(Actor actor) {
 		if (moveMentSequenceFrames.containsKey(actor)) {
 			return moveMentSequenceFrames.get(actor);
-		} else return -1;
+		} else return 999;
 	}
 	public void setLastFrameMovementSequence(Actor actor, int sequenceId) {
 		moveMentSequenceFrames.put(actor, sequenceId);
@@ -1857,10 +2151,35 @@ public class RuneMod extends Plugin
 	}
 */
 
+
+	@Subscribe
+	private void onBeforeRender(BeforeRender event)
+	{
+
+		SendPerFramePacket();
+
+
+		if (!ClientUI.getFrame().getTitle().equals("OpenOSRS")) {
+			ClientUI.getFrame().setTitle("OpenOSRS");
+		}
+
+		if (clientJustConnected) {
+			if (client.getGameState() == GameState.LOGIN_SCREEN || client.getGameState() == GameState.LOGIN_SCREEN_AUTHENTICATOR) {
+				toggleRuneModOverlayOff();;
+			} else {
+				toggleRuneModOverlayOn();
+			}
+			libMeshIDs.clear();
+			sentInstanceIds.clear();
+			clientJustConnected = false;
+			//myRunnableSender.clientConnected = false;
+		}
+	}
+
 	@Subscribe
 	private void onClientTick(ClientTick event)
 	{
-		SendPerFramePacket();
+
 /*		WorldPoint area0 = new WorldPoint(1988, 5111, 0);
 		WorldPoint playerLocation = client.getLocalPlayer().getWorldLocation();
 
@@ -2034,15 +2353,9 @@ public class RuneMod extends Plugin
 		if (canvasSizeChanged||clientJustConnected) {
 			clientThread.invokeLater(() -> {
 				Buffer canvasSizeBuffer = client.createBuffer(new byte[4]);
-				myRunnableSender.sendBytes(canvasSizeBuffer.getPayload(), "CanvasSizeChanged");
+				myRunnableSender.sendBytes(canvasSizeBuffer.getPayload(), "CanvasSizeChanged"); //this datatype triggers our shared memory to update its data/dimensions i think.
 				canvasSizeChanged = false;
 			});
-
-
-		}
-		if (clientJustConnected) {
-			System.out.println("Client Just Connected");
-			clientJustConnected = false;
 		}
 
 
