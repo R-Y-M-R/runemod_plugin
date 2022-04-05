@@ -195,8 +195,21 @@ public class RuneMod extends Plugin
 		}
 	}
 
+	static public boolean runningFromIntelliJ()
+	{
+		boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("jdwp") >= 0;
+		return isDebug;
+	}
+
 	@Override
 	protected void startUp() throws IOException {
+		if (!runningFromIntelliJ()) {
+			executorService2.execute(new RuneMod_Launcher(new RuneMod_statusUI()));
+		}
+
+		//System.out.println("isDebug: " + isDebug);
+
+
 
 		//setup runemod toggler
 		NavigationButton titleBarButton;
@@ -330,8 +343,6 @@ public class RuneMod extends Plugin
 				}
 			}
 		}, AWTEvent.MOUSE_EVENT_MASK);
-
-		executorService2.execute(new RuneMod_Launcher(new RuneMod_statusUI()));
 
 
 		//downloadZip("https://runemod.net/app_download/runemod_master.zip", "runemod_master.zip");
@@ -2169,8 +2180,6 @@ public class RuneMod extends Plugin
 			} else {
 				toggleRuneModOverlayOn();
 			}
-			libMeshIDs.clear();
-			sentInstanceIds.clear();
 			clientJustConnected = false;
 			//myRunnableSender.clientConnected = false;
 		}
