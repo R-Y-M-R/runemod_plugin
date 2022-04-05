@@ -1898,7 +1898,7 @@ public class RuneMod extends Plugin
 	@Subscribe
 	private void onAnimationChanged(AnimationChanged event) {
 		//int actorId = event.getActor().getRSInteracting();
-		clientThread.invokeLater(() ->
+/*		clientThread.invokeLater(() ->
 		{
 			clientThread.invokeLater(() ->
 			{
@@ -1982,7 +1982,7 @@ public class RuneMod extends Plugin
 					}
 				}
 			});
-		});
+		});*/
 	}
 
 	@Subscribe
@@ -2273,17 +2273,17 @@ public class RuneMod extends Plugin
 
 				//set animation ints depending on which animation type is not null (spot, pose or normal)
 				if (npc.getAnimation()!= -1) {
-					//npcAnimation = npc.getAnimation();
+					npcAnimation = npc.getAnimation();
 					npcAnimationFrame = npc.getActionFrame();
 					npcAnimationFrameCycle = npc.getActionFrameCycle();
 				}else {
 					if (npc.getPoseAnimation() != -1) {
-						//npcAnimation = npc.getPoseAnimation();
+						npcAnimation = npc.getPoseAnimation();
 						npcAnimationFrame = npc.getPoseFrame();
 						npcAnimationFrameCycle = npc.getPoseFrameCycle();
 					}else
 					if (npc.getGraphic() != -1) {
-						//npcAnimation = npc.getGraphic();
+						npcAnimation = npc.getGraphic();
 						npcAnimationFrame = npc.getSpotAnimFrame();
 						//temp npcAnimationFrameCycle = npc.getSpotAnimationFrameCycle();
 					}
@@ -2321,18 +2321,18 @@ public class RuneMod extends Plugin
 
 				//set animation ints depending on which animation type is not null (spot, pose or normal)
 				if (player.getAnimation()!= -1) {
-					//npcAnimation = npc.getAnimation();
+					animation = player.getAnimation();
 					animationFrame = player.getActionFrame();
 					animationFrameCycle = player.getActionFrameCycle();
 				}else {
 					if (player.getPoseAnimation() != -1) {
-						//npcAnimation = npc.getPoseAnimation();
+						animation = player.getPoseAnimation();
 						animationFrame = player.getPoseFrame();
 						animationFrameCycle = player.getPoseFrameCycle();
 					}else
 					if (player.getGraphic() != -1) {
-						//npcAnimation = npc.getGraphic();
-						animationFrame = player.getGraphic();
+						animation = player.getGraphic();
+						animationFrame = player.getSpotAnimFrame();
 						//temp animationFrameCycle = player.getSpotAnimationFrameCycle();
 					}
 				}
