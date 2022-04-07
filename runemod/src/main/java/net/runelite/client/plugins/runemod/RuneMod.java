@@ -197,42 +197,12 @@ public class RuneMod extends Plugin
 
 	static public boolean runningFromIntelliJ()
 	{
-		boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("jdwp") >= 0;
+		//boolean isDebug = java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments().toString().indexOf("jdwp") >= 0;
+		boolean isDebug = System.getProperty("launcher.version") == null;
 		return isDebug;
 	}
 
-	@Override
-	protected void startUp() throws IOException {
-		if (!runningFromIntelliJ()) {
-			executorService2.execute(new RuneMod_Launcher(new RuneMod_statusUI()));
-		}
-
-		//System.out.println("isDebug: " + isDebug);
-
-
-
-		//setup runemod toggler
-		NavigationButton titleBarButton;
-
-		final BufferedImage iconImage = ImageUtil.loadImageResource(getClass(), "runemod.png");
-
-		titleBarButton = NavigationButton.builder()
-				.tab(false)
-				.tooltip("Toggle RuneMod visibility")
-				.icon(iconImage)
-				.onClick(this::toggleRuneModOverlay)
-				.popup(ImmutableMap
-						.<String, Runnable>builder()
-						.put("Open screenshot folder...", () ->
-						{
-							LinkBrowser.open(SCREENSHOT_DIR.toString());
-						})
-						.build())
-				.build();
-
-		clientToolbar.addNavigation(titleBarButton);
-
-
+	public void registerWindowEventListeners() {
 		//setup window event listeners
 		ClientUI.getFrame().addComponentListener(new ComponentAdapter() {
 			public void componentMoved(ComponentEvent e) {
@@ -321,9 +291,9 @@ public class RuneMod extends Plugin
 			@Override
 			public void windowDeactivated(WindowEvent e) {
 				System.out.println("windowDeactivated");
-					Buffer buffer = client.createBuffer(new byte[20]);
-					buffer.writeByte(8);
-					myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
+				Buffer buffer = client.createBuffer(new byte[20]);
+				buffer.writeByte(8);
+				myRunnableSender.sendBytes(trimmedBufferBytes(buffer),"WindowEvent");
 			}
 		});
 
@@ -344,16 +314,6 @@ public class RuneMod extends Plugin
 			}
 		}, AWTEvent.MOUSE_EVENT_MASK);
 
-
-		//downloadZip("https://runemod.net/app_download/runemod_master.zip", "runemod_master.zip");
-/*		RuneMod_status runeMod_status = new RuneMod_status();
-		executorService2.execute(runeMod_status);*/
-/*		SwingUtilities.invokeLater(() -> {
-			JOptionPane.showMessageDialog(ClientUI.getFrame(), "message urrr", "title err", JOptionPane.INFORMATION_MESSAGE);
-		});*/
-
-
-
 		client.getCanvas().addMouseListener(new MouseAdapter()
 		{
 			@Override
@@ -366,6 +326,40 @@ public class RuneMod extends Plugin
 				System.out.println("isPopupTrigger: "+mouseEvent.isPopupTrigger());
 			}
 		});
+	}
+
+	@Override
+	protected void startUp() throws IOException {
+		if (!runningFromIntelliJ()) {
+			executorService2.execute(new RuneMod_Launcher(new RuneMod_statusUI()));
+			registerWindowEventListeners();
+		}
+
+
+
+		//setup runemod toggler
+		NavigationButton titleBarButton;
+
+		final BufferedImage iconImage = ImageUtil.loadImageResource(getClass(), "runemod.png");
+
+		titleBarButton = NavigationButton.builder()
+				.tab(false)
+				.tooltip("Toggle RuneMod visibility")
+				.icon(iconImage)
+				.onClick(this::toggleRuneModOverlay)
+				.popup(ImmutableMap
+						.<String, Runnable>builder()
+						.put("Open screenshot folder...", () ->
+						{
+							LinkBrowser.open(SCREENSHOT_DIR.toString());
+						})
+						.build())
+				.build();
+
+		clientToolbar.addNavigation(titleBarButton);
+
+
+
 
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		rsclient_ui_pixels_shared_memory.createSharedMemory("rsclient_ui_pixels", ((screenSize.height*screenSize.width*4)+4));
@@ -1341,6 +1335,7 @@ public class RuneMod extends Plugin
 	}
 
 
+	@SneakyThrows
 	@Subscribe
 	private void onGameStateChanged(GameStateChanged event) {
 		GameState gamestate = event.getGameState();
@@ -1353,12 +1348,12 @@ public class RuneMod extends Plugin
 		}else
 		if (gamestate == GameState.LOGGING_IN)
 		{
+			toggleRuneModOverlayOn();
 			System.out.println("logging in...");
 			newEventTypeByte = 2;
 		}else
 		if (gamestate == GameState.LOGGED_IN)
 		{
-			toggleRuneModOverlayOn();
 			System.out.println("logged in...");
 			newEventTypeByte = 3;
 		}else
@@ -1373,6 +1368,9 @@ public class RuneMod extends Plugin
 			System.out.println("loading...");
 			newEventTypeByte = 5;
 			newRegionLoaded = true;
+			myRunnableSender.sendBytes(new byte[] {newEventTypeByte,0,0},"GameStateChanged");
+			client.getClientThread().sleep(100);
+			return;
 		}else
 		if (gamestate == GameState.LOGIN_SCREEN)
 		{
@@ -2040,15 +2038,28 @@ public class RuneMod extends Plugin
 
 	@Subscribe
 	private void onNpcSpawned(NpcSpawned event) {
-		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
-		int instanceId = event.getNpc().getIndex();
-		int definitionId = event.getNpc().getId();
-		actorSpawnPacket.writeByte(1); //write npc data type
-		actorSpawnPacket.writeShort(instanceId);
-		actorSpawnPacket.writeShort(definitionId);
+		clientThread.invokeLater(() -> {
+			clientThread.invokeLater(() -> {
+				clientThread.invokeLater(() -> {
+					clientThread.invokeLater(() -> {
+						clientThread.invokeLater(() -> {
+							clientThread.invokeLater(() -> {
+							Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
-		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorSpawn");
+							int instanceId = event.getNpc().getIndex();
+							int definitionId = event.getNpc().getId();
+							actorSpawnPacket.writeByte(1); //write npc data type
+							actorSpawnPacket.writeShort(instanceId);
+							actorSpawnPacket.writeShort(definitionId);
+							System.out.println("NPC Spawn kashjkasd");
+							myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorSpawn");
+							});
+						});
+					});
+				});
+			});
+		});
 	}
 
 	@Subscribe
@@ -2236,8 +2247,7 @@ public class RuneMod extends Plugin
 		int clientBaseX = client.getBaseX();
 		int clientBaseY = client.getBaseY();
 		int clientPlane = client.getPlane();
-		//temp int maxVisiblePlane = client.getMaxScenePlane();
-		int maxVisiblePlane = 3; //temp
+		int maxVisiblePlane = client.getScenePlane();
 		int clientCycle = client.getGameCycle();
 
 		int playerLocalX = client.getLocalPlayer().getLocalLocation().getX();
