@@ -332,8 +332,8 @@ public class RuneMod extends Plugin
 	protected void startUp() throws IOException {
 		if (!runningFromIntelliJ()) {
 			executorService2.execute(new RuneMod_Launcher(new RuneMod_statusUI()));
-			registerWindowEventListeners();
 		}
+		registerWindowEventListeners();
 
 
 
@@ -2036,7 +2036,7 @@ public class RuneMod extends Plugin
 		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorDeSpawn");
 	}
 
-	@Subscribe
+	//@Subscribe
 	private void onNpcSpawned(NpcSpawned event) {
 
 		clientThread.invokeLater(() -> {
@@ -2075,7 +2075,7 @@ public class RuneMod extends Plugin
 		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorDeSpawn");
 	}
 
-	@Subscribe
+	//@Subscribe
 	private void onPlayerChanged(PlayerChanged event) {
 		Player player = event.getPlayer();
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
@@ -2111,9 +2111,13 @@ public class RuneMod extends Plugin
 		Player player = event.getPlayer();
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
-		int InstanceId = event.getPlayer().getPlayerId();
 		actorSpawnPacket.writeByte(2); //write player data type
+
+		int InstanceId = event.getPlayer().getPlayerId();
 		actorSpawnPacket.writeShort(InstanceId);
+
+		byte isLocalPlayer = (client.getLocalPlayerIndex() == player.getPlayerId()) ? (byte)1 : (byte)0;
+		actorSpawnPacket.writeByte(isLocalPlayer);
 
 		int[] equipmentIds = player.getPlayerComposition().getEquipmentIds();
 		for (int i = 0; i < 12; i++)//equipment
@@ -2177,9 +2181,7 @@ public class RuneMod extends Plugin
 	@Subscribe
 	private void onBeforeRender(BeforeRender event)
 	{
-
 		SendPerFramePacket();
-
 
 		if (!ClientUI.getFrame().getTitle().equals("OpenOSRS")) {
 			ClientUI.getFrame().setTitle("OpenOSRS");
@@ -2199,7 +2201,6 @@ public class RuneMod extends Plugin
 	@Subscribe
 	private void onClientTick(ClientTick event)
 	{
-
 /*		WorldPoint area0 = new WorldPoint(1988, 5111, 0);
 		WorldPoint playerLocation = client.getLocalPlayer().getWorldLocation();
 

@@ -358,7 +358,7 @@ public class MyRunnableSender implements Runnable {
             case "String":
                 dataTypeByte = 1;
                 break;
-            case "LibMesh":
+            case "Connection":
                 dataTypeByte = 2;
                 break;
             case "GameObject":
