@@ -2075,14 +2075,18 @@ public class RuneMod extends Plugin
 		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorDeSpawn");
 	}
 
-	//@Subscribe
+	@Subscribe
 	private void onPlayerChanged(PlayerChanged event) {
 		Player player = event.getPlayer();
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
-		int InstanceId = event.getPlayer().getPlayerId();
 		actorSpawnPacket.writeByte(2); //write player data type
+
+		int InstanceId = event.getPlayer().getPlayerId();
 		actorSpawnPacket.writeShort(InstanceId);
+
+		byte isLocalPlayer = (client.getLocalPlayerIndex() == player.getPlayerId()) ? (byte)1 : (byte)0;
+		actorSpawnPacket.writeByte(isLocalPlayer);
 
 		int[] equipmentIds = player.getPlayerComposition().getEquipmentIds();
 		for (int i = 0; i < 12; i++)//equipment
