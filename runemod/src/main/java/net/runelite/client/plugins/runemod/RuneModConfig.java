@@ -40,14 +40,25 @@ public interface RuneModConfig extends Config
 	}
 
 	@ConfigItem(
-			position = 5,
-			keyName = "VarPlayerID",
-			name = "VarPlayer ID",
-			description = ""
+			keyName = "spawnNPCs",
+			name = "spawnNPCs",
+			description = "spawnNPCs",
+			position = 2
 	)
-	default int VarPlayerID()
+	default boolean spawnNPCs()
 	{
-		return 1;
+		return true;
+	}
+
+	@ConfigItem(
+			keyName = "spawnPlayers",
+			name = "spawnPlayers",
+			description = "spawnPlayers",
+			position = 2
+	)
+	default boolean spawnPlayers()
+	{
+		return true;
 	}
 
 	@ConfigItem(

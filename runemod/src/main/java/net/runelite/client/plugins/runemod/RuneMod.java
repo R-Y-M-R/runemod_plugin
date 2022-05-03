@@ -2036,9 +2036,9 @@ public class RuneMod extends Plugin
 		myRunnableSender.sendBytes(trimmedBufferBytes(actorSpawnPacket), "ActorDeSpawn");
 	}
 
-	//@Subscribe
+	@Subscribe
 	private void onNpcSpawned(NpcSpawned event) {
-
+		if (!config.spawnNPCs()) { return; }
 		clientThread.invokeLater(() -> {
 			clientThread.invokeLater(() -> {
 				clientThread.invokeLater(() -> {
@@ -2077,6 +2077,7 @@ public class RuneMod extends Plugin
 
 	@Subscribe
 	private void onPlayerChanged(PlayerChanged event) {
+		if (!config.spawnPlayers()) { return; }
 		Player player = event.getPlayer();
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
@@ -2112,6 +2113,7 @@ public class RuneMod extends Plugin
 
 	@Subscribe
 	private void onPlayerSpawned(PlayerSpawned event) {
+		if (!config.spawnPlayers()) { return; }
 		Player player = event.getPlayer();
 		Buffer actorSpawnPacket = client.createBuffer(new byte[100]);
 
